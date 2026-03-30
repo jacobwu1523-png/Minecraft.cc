@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MC2D生存">
+    <title>Minecraft 2D - 全裝置存檔版</title>
+    <style>
+        :root { --ui-font: clamp(10px, 2.5vw, 15px); --btn-s: clamp(60px, 15vw, 85px); }
+        body { 
+            margin: 0; overflow: hidden; background: #1b301b; 
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            touch-action: none; width: 100vw; height: 100vh; user-select: none;
+            -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+        }
+        #ui-bar {
+            position: absolute; top: env(safe-area-inset-top, 10px); left: 50%; transform: translateX(-50%);
+            z-index: 5000; display: flex; gap: 2vw; background: rgba(0,0,0,0.8);
+            padding: 8px 15px; border-radius: 25px; border: 1px solid #666; width: fit-content; max-width: 95vw;
+        }
+        .stat { color: white; font-size: var(--ui-font); font-weight: bold; display: flex; align-items: center; gap: 3px; }
+        #game { position: relative; width: 100%; height: 100%; overflow: hidden; }
+        #player { position: absolute; width: 46px; height: 46px; background: #3498db; border: 3px solid white; border-radius: 50%; z-index: 1000; display: flex; align-items: center; justify-content: center; font-size: 26px; }
+        #hand { position: absolute; right: -12px; bottom: -8px; font-size: 20px; background: #fff; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border: 2px solid #333; color: #000; }
+        #joy { position: absolute; bottom: calc(env(safe-area-inset-bottom, 20px) + 8vh); left: 8vw; width: 120px; height: 120px; background: rgba(255,255,255,0.1); border: 2px solid #fff; border-radius: 50%; z-index: 4000; }
+        #knob { position: absolute; width: 45px; height: 45px; background: #fff; border-radius: 50%; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+        #btns { position: absolute; bottom: calc(env(safe-area-inset-bottom, 20px) + 8vh); right: 5vw; display: flex; flex-direction: column; gap: 12px; z-index: 4500; }
+        .c-btn { width: var(--btn-s); height: var(--btn-s); background: #f1c40f; border: 3px solid #fff; border-radius: 50%; font-size: 32px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
+        .pop { position: absolute; inset: 10% 5%; background: rgba(25,25,25,0.98); border: 4px solid #f1c40f; display: none; z-index: 6000; border-radius: 20px; padding: 15px; color: white; overflow-y: auto; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .card { background: #222; padding: 12px; border-radius: 15px; text-align: center; border: 1px solid #444; }
+        .craft-btn { width: 100%; margin-top: 10px; padding: 10px; background: #27ae60; color: white; border: none; border-radius: 10px; font-weight: bold; }
+        .obj { position: absolute; width: 48px; height: 48px; font-size: 38px; text-align: center; line-height: 48px; z-index: 500; }
+        .river-tile { background: rgba(52, 152, 219, 0.6); z-index: 5; border-radius: 5px; }
+        .house { font-size: 75px; width: 90px; height: 90px; z-index: 400; }
+        #m-bar { position: absolute; width: 60px; height: 10px; background: #000; display: none; z-index: 3000; border: 1.5px solid #fff; border-radius: 5px; overflow: hidden; }
+        #m-fill { height: 100%; background: #f1c40f; width: 0%; transition: width 0.1s; }
+    </style>
+</head>
+<body>
+<div id="game">
+    <div id="world-layers" style="position:absolute; inset:0;"><div id="river-layer"></div><div id="entity-layer"></div></div>
+    <div id="ui-bar">
+        <div class="stat">❤️<span id="hp">20</span></div>
+        <div class="stat">🍖<span id="hg">20</span></div>
+        <div class="stat">🪵<span id="r-w">0</span></div>
+        <div class="stat">🪨<span id="r-s">0</span></div>
+        <div class="stat">🏔️<span id="r-i">0</span></div>
+        <div class="stat">💎<span id="r-d">0</span></div>
+    </div>
+    <div id="m-bar"><div id="m-fill"></div></div>
+    <div id="player">🧑‍🦲<div id="hand" style="display:none"></div></div>
+    <div id="joy"><div id="knob"></div></div>
+    <div id="btns"><div class="c-btn" onclick="openUI('bag')">🎒</div><div class="c-btn" onclick="openUI('craft')">⚒️</div></div>
+    <div id="bag-pop" class="pop"><h2 style="text-align:center">🎒 背包</h2><div id="bag-list" class="grid"></div><button onclick="closeUI()" style="width:100%; margin-top:20px; padding:15px; background:#e74c3c; border:none; color:white; border-radius:12px;">關閉</button></div>
+    <div id="craft-pop" class="pop"><div id="craft-list" class="grid"></div><button onclick="closeUI()" style="width:100%; margin-top:15px; padding:15px; background:#e74c3c; border:none; color:white; border-radius:12px;">返回</button></div>
+</div>
+<script>
+    // --- 存檔與適配邏輯 ---
+    const SAVE_KEY = "MC2D_FINAL_SAVE";
+    var inv, bag, worldData, mapMode = 'forest', pX, pY, mX=0, mY=0, mining=false, currentEquip=null;
+
+    function save() { localStorage.setItem(SAVE_KEY, JSON.stringify({inv, bag, worldData})); }
+    function load() {
+        const d = JSON.parse(localStorage.getItem(SAVE_KEY));
+        if(d) { inv=d.inv; bag=d.bag; worldData=d.worldData; }
+        else { 
+            inv={w:0,s:0,i:0,d:0,hp:20,hg:20,wool:0}; bag=[]; 
+            worldData={forest:{items:[],rivers:[]},house:{items:[]},cave:{items:[]}};
+            initWorld();
+        }
+        pX=window.innerWidth/2; pY=window.innerHeight/2;
+    }
+
+    function initWorld() {
+        let rx = window.innerWidth * 0.45;
+        for(let y=0; y<window.innerHeight; y+=45) { rx += Math.sin(y/100)*35; worldData.forest.rivers.push({x:rx, y:y}); }
+        for(let i=0; i<6; i++) worldData.forest.items.push({t:'tree', icon:'🌲', x:Math.random()*window.innerWidth, y:Math.random()*window.innerHeight, live:true});
+        worldData.forest.items.push({t:'cave_entrance', icon:'🕳️', x:window.innerWidth-80, y:window.innerHeight/2, live:true});
+    }
+
+    function switchMap(mode) {
+        mapMode = mode;
+        document.getElementById('river-layer').innerHTML = '';
+        document.getElementById('entity-layer').innerHTML = '';
+        if(mode === 'forest') {
+            document.body.style.background = "#2d4a22";
+            worldData.forest.rivers.forEach(r => { let d=document.createElement('div'); d.className='obj river-tile'; d.style.left=r.x+'px'; d.style.top=r.y+'px'; document.getElementById('river-layer').appendChild(d); });
+        } else { document.body.style.background = mode==='house'?"#5d4037":"#1a1a1a"; }
+        worldData[mode].items.forEach(it => { if(it.live) render(it); });
+    }
+
+    function render(it) {
+        let d = document.createElement('div'); d.className = 'obj '+(it.t.includes('house')?'house':'');
+        d.innerHTML = it.icon; d.style.left = it.x+'px'; d.style.top = it.y+'px';
+        document.getElementById('entity-layer').appendChild(d); it.el = d;
+    }
+
+    function gameLoop() {
+        if(!mining) {
+            pX+=mX; pY+=mY; pX=Math.max(20, Math.min(window.innerWidth-20, pX)); pY=Math.max(20, Math.min(window.innerHeight-20, pY));
+            document.getElementById('player').style.left=pX+'px'; document.getElementById('player').style.top=pY+'px';
+            worldData[mapMode].items.forEach(it => {
+                if(!it.live) return;
+                if(Math.abs(pX-it.x-24)<45 && Math.abs(pY-it.y-24)<45) {
+                    if(it.t==='cave_entrance') { switchMap('cave'); pX=window.innerWidth/2; pY=window.innerHeight/2; }
+                    else { startMine(it); }
+                }
+            });
+        }
+        requestAnimationFrame(gameLoop);
+    }
+
+    function startMine(it) {
+        mining=true; mX=0; mY=0;
+        let bar=document.getElementById('m-bar'), fill=document.getElementById('m-fill');
+        bar.style.display='block'; bar.style.left=(pX-30)+'px'; bar.style.top=(pY-55)+'px';
+        let pct=0, spd=currentEquip?30:10;
+        let t=setInterval(()=>{
+            pct+=spd; fill.style.width=pct+'%';
+            if(pct>=100){ clearInterval(t); mining=false; bar.style.display='none'; it.live=false; it.el.style.display='none';
+                if(it.t==='tree') inv.w+=3; else inv.s+=2; save(); upUI();
+                setTimeout(()=>{ it.live=true; it.el.style.display='block'; }, 6000);
+            }
+        }, 150);
+    }
+
+    function openUI(t) { closeUI(); document.getElementById(t+'-pop').style.display='block'; if(t==='bag') drawBag(); else drawCraft(); }
+    function closeUI() { document.querySelectorAll('.pop').forEach(p=>p.style.display='none'); }
+    function upUI() { document.getElementById('r-w').innerText=inv.w; document.getElementById('r-s').innerText=inv.s; document.getElementById('hp').innerText=inv.hp; }
+    
+    // 搖桿控速 (自適配所有螢幕)
+    var joy=document.getElementById('joy');
+    joy.addEventListener('touchstart', (e)=>moveJ(e.touches[0]), {passive:false});
+    joy.addEventListener('touchmove', (e)=>{ e.preventDefault(); moveJ(e.touches[0]); }, {passive:false});
+    joy.addEventListener('touchend', ()=>{ mX=0; mY=0; document.getElementById('knob').style.transform='translate(-50%,-50%)'; });
+    function moveJ(t) { if(mining) return; var r=joy.getBoundingClientRect(); var dx=t.clientX-(r.left+r.width/2), dy=t.clientY-(r.top+r.height/2); var d=Math.sqrt(dx*dx+dy*dy); if(d>45){ dx*=45/d; dy*=45/d; } document.getElementById('knob').style.transform=`translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`; mX=dx/13; mY=dy/13; }
+
+    load(); switchMap('forest'); upUI(); requestAnimationFrame(gameLoop); setInterval(save, 5000);
+</script>
+</body>
+</html>
+
+
