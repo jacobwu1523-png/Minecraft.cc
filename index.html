@@ -5,61 +5,250 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Minecraft 2D - Cave Expansion</title>
+    <title>Minecraft 2D - Dimension Update</title>
     <style>
         :root { --ui-font: clamp(10px, 2.5vw, 14px); --btn-s: clamp(60px, 15vw, 85px); }
-        body { margin: 0; overflow: hidden; background: #2d4a22; font-family: sans-serif; touch-action: none; width: 100vw; height: 100vh; user-select: none; -webkit-user-select: none; }
-        #ui-bar { position: absolute; top: env(safe-area-inset-top, 10px); left: 50%; transform: translateX(-50%); z-index: 5000; display: flex; flex-wrap: wrap; justify-content: center; gap: 2vw; background: rgba(0,0,0,0.85); padding: 8px 15px; border-radius: 20px; border: 1px solid #666; width: fit-content; max-width: 95vw; }
-        .stat { color: white; font-size: var(--ui-font); font-weight: bold; display: flex; align-items: center; gap: 3px; }
-        #game { position: relative; width: 100%; height: 100%; overflow: hidden; }
-        #player { position: absolute; width: 44px; height: 44px; background: #3498db; border: 3px solid white; border-radius: 50%; z-index: 1000; display: flex; align-items: center; justify-content: center; font-size: 24px; transition: transform 0.1s; }
+        body { margin: 0; overflow: hidden; background: #2d4a22; font-family: sans-serif; touch-action: none; width: 100vw; height: 100vh; user-select: none; }
+        #ui-bar { position: absolute; top: env(safe-area-inset-top, 10px); left: 50%; transform: translateX(-50%); z-index: 5000; display: flex; flex-wrap: wrap; justify-content: center; gap: 1.5vw; background: rgba(0,0,0,0.85); padding: 8px 12px; border-radius: 20px; border: 1px solid #666; width: fit-content; max-width: 98vw; }
+        .stat { color: white; font-size: var(--ui-font); font-weight: bold; display: flex; align-items: center; gap: 2px; }
+        #game { position: relative; width: 100%; height: 100%; overflow: hidden; transition: background 1s; }
+        #player { position: absolute; width: 44px; height: 44px; background: #3498db; border: 3px solid white; border-radius: 50%; z-index: 1000; display: flex; align-items: center; justify-content: center; font-size: 24px; }
         #hand { position: absolute; right: -12px; bottom: -8px; font-size: 18px; background: #fff; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border: 2px solid #333; color: #000; }
-        #joy { position: absolute; bottom: 10vh; left: 8vw; width: 120px; height: 120px; background: rgba(255,255,255,0.1); border: 2px solid #fff; border-radius: 50%; z-index: 4000; }
-        #knob { position: absolute; width: 45px; height: 45px; background: #fff; border-radius: 50%; left: 50%; top: 50%; transform: translate(-50%, -50%); }
-        #btns { position: absolute; bottom: 10vh; right: 5vw; display: flex; flex-direction: column; gap: 12px; z-index: 4500; }
-        .c-btn { width: var(--btn-s); height: var(--btn-s); background: #f1c40f; border: 3px solid #fff; border-radius: 50%; font-size: 32px; display: flex; align-items: center; justify-content: center; }
+        #joy { position: absolute; bottom: 10vh; left: 8vw; width: 110px; height: 110px; background: rgba(255,255,255,0.1); border: 2px solid #fff; border-radius: 50%; z-index: 4000; }
+        #knob { position: absolute; width: 40px; height: 40px; background: #fff; border-radius: 50%; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+        #btns { position: absolute; bottom: 10vh; right: 5vw; display: flex; flex-direction: column; gap: 10px; z-index: 4500; }
+        .c-btn { width: var(--btn-s); height: var(--btn-s); background: #f1c40f; border: 3px solid #fff; border-radius: 50%; font-size: 28px; display: flex; align-items: center; justify-content: center; }
         .pop { position: absolute; inset: 10% 5%; background: rgba(20,20,20,0.98); border: 4px solid #f1c40f; display: none; z-index: 6000; border-radius: 20px; padding: 15px; color: white; overflow-y: auto; }
-        .tab-bar { display: flex; gap: 5px; margin-bottom: 10px; border-bottom: 1px solid #444; }
-        .tab { flex: 1; padding: 10px; background: #333; border-radius: 8px; text-align: center; font-size: 11px; }
-        .tab.active { background: #f1c40f; color: black; font-weight: bold; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .card { background: #222; padding: 12px; border-radius: 15px; text-align: center; border: 1px solid #444; }
-        .craft-btn { width: 100%; margin-top: 10px; padding: 10px; background: #27ae60; color: white; border: none; border-radius: 10px; font-weight: bold; }
-        .obj { position: absolute; width: 48px; height: 48px; font-size: 38px; text-align: center; line-height: 48px; z-index: 500; }
+        .tab-bar { display: flex; gap: 4px; margin-bottom: 10px; }
+        .tab { flex: 1; padding: 8px; background: #333; border-radius: 8px; text-align: center; font-size: 11px; }
+        .tab.active { background: #f1c40f; color: #000; font-weight: bold; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .card { background: #222; padding: 10px; border-radius: 12px; text-align: center; border: 1px solid #444; }
+        .craft-btn { width: 100%; margin-top: 8px; padding: 8px; background: #27ae60; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 11px; }
+        .obj { position: absolute; width: 48px; height: 48px; font-size: 36px; text-align: center; line-height: 48px; z-index: 500; }
         .river-tile { background: rgba(52, 152, 219, 0.6); z-index: 5; border-radius: 5px; }
-        #m-bar { position: absolute; width: 60px; height: 10px; background: #000; display: none; z-index: 3000; border: 1.5px solid #fff; border-radius: 5px; overflow: hidden; }
+        #m-bar { position: absolute; width: 60px; height: 10px; background: #000; display: none; z-index: 3000; border: 1.5px solid #fff; border-radius: 5px; }
         #m-fill { height: 100%; background: #f1c40f; width: 0%; }
-        #msg { position: fixed; top: 18%; left: 50%; transform: translateX(-50%); background: rgba(200,0,0,0.85); color: #fff; padding: 10px 20px; border-radius: 20px; z-index: 9999; display: none; font-weight: bold; }
+        #msg { position: fixed; top: 18%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); color: #00f2ff; padding: 10px 20px; border-radius: 20px; z-index: 9999; display: none; font-weight: bold; }
+        #exp-tag { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); color: #2ecc71; font-weight: bold; font-size: 14px; text-shadow: 1px 1px 2px #000; }
     </style>
 </head>
 <body>
 <div id="msg"></div>
+<div id="exp-tag">✨ 經驗: 0</div>
 <div id="game">
     <div id="world-layers" style="position:absolute; inset:0;"><div id="river-layer"></div><div id="entity-layer"></div></div>
     <div id="ui-bar">
-        <div class="stat">❤️<span id="hp">20</span></div><div class="stat">🍖<span id="hg">20</span></div>
-        <div class="stat">⚡<span id="pwr">0</span></div>
-        <div class="stat">🪵<span id="r-w">0</span></div><div class="stat">🪨<span id="r-s">0</span></div>
-        <div class="stat">🏔️<span id="r-i">0</span></div><div class="stat">🟡<span id="r-g">0</span></div><div class="stat">💎<span id="r-d">0</span></div>
+        <div class="stat">❤️<span id="hp">20</span></div><div class="stat">🍖<span id="hg">20</span></div><div class="stat">💧<span id="wt">20</span></div>
+        <div class="stat">🪵<span id="r-w">0</span></div><div class="stat">🪨<span id="r-s">0</span></div><div class="stat">🏔️<span id="r-i">0</span></div>
+        <div class="stat">💎<span id="r-d">0</span></div><div class="stat">🏅<span id="r-n">0</span></div>
     </div>
     <div id="m-bar"><div id="m-fill"></div></div>
     <div id="player">🧑‍🦲<div id="hand" style="display:none"></div></div>
     <div id="joy"><div id="knob"></div></div>
     <div id="btns"><div class="c-btn" onclick="openUI('bag')">🎒</div><div class="c-btn" onclick="openUI('craft')">⚒️</div></div>
-    <div id="bag-pop" class="pop"><h2 style="text-align:center">🎒 背包</h2><div id="bag-list" class="grid"></div><button onclick="closeUI()" style="width:100%; margin-top:20px; padding:15px; background:#e74c3c; border:none; color:white; border-radius:12px; font-weight:bold;">關閉</button></div>
-    <div id="craft-pop" class="pop"><div class="tab-bar"><div class="tab active" onclick="setTab('tools', this)">工具</div><div class="tab" onclick="setTab('tech', this)">科技</div><div class="tab" onclick="setTab('decor', this)">建築</div></div><div id="craft-list" class="grid"></div><button onclick="closeUI()" style="width:100%; margin-top:15px; padding:15px; background:#e74c3c; border:none; color:white; border-radius:12px;">返回</button></div>
+    <div id="bag-pop" class="pop"><h2 style="text-align:center">🎒 我的背包</h2><div id="bag-list" class="grid"></div><button onclick="closeUI()" style="width:100%; margin-top:20px; padding:15px; background:#e74c3c; border:none; color:white; border-radius:12px;">關閉</button></div>
+    <div id="craft-pop" class="pop"><div class="tab-bar">
+        <div class="tab active" onclick="setTab('tools', this)">工具</div>
+        <div class="tab" onclick="setTab('build', this)">建築</div>
+        <div class="tab" onclick="setTab('special', this)">進階</div>
+    </div><div id="craft-list" class="grid"></div><button onclick="closeUI()" style="width:100%; margin-top:15px; padding:15px; background:#e74c3c; border:none; color:white; border-radius:12px;">返回</button></div>
 </div>
 <script>
-    const SAVE_KEY = "MC2D_CAVE_PRO";
+    const SAVE_KEY = "MC2D_DIMENSION_PRO";
     var inv, bag, worldData, mapMode = 'forest', pX, pY, mX=0, mY=0, mining=false, currentEquip=null;
 
     const recipes = {
-        tools: [{id:'i_pick', name:'鐵鎬', emo:'⛏️', cost:{w:2, i:3}, dur:60},{id:'d_pick', name:'鑽石鎬', emo:'⛏️', cost:{w:2, d:3}, dur:250}],
-        tech: [{id:'generator', name:'發電機', emo:'🏭', cost:{i:5, s:10}, type:'build'},{id:'auto_miner', name:'自動機', emo:'🤖', cost:{i:12, d:1}, type:'build'}],
-        decor: [{id:'log_house', name:'原木房', emo:'🛖', cost:{w:12}, type:'build'},{id:'bed', name:'床', emo:'🛏️', cost:{w:3, wool:2}, type:'place'}]
+        tools: [{id:'i_pick', name:'鐵鎬', emo:'⛏️', cost:{i:3, w:2}},{id:'d_pick', name:'鑽石鎬', emo:'⛏️', cost:{d:3, w:2}},{id:'n_pick', name:'合金鎬', emo:'⛏️', cost:{n:3, d_pick:1}, isNether:true}],
+        build: [{id:'log_house', name:'原木房', emo:'🛖', cost:{w:12}, type:'build'},{id:'portal', name:'地獄門', emo:'🟣', cost:{obsidian:10}, type:'build'}],
+        special: [{id:'ench_table', name:'附魔台', emo:'📖', cost:{d:2, obsidian:4}, type:'build'},{id:'enchant', name:'附魔工具', emo:'✨', cost:{exp:10, d:1}, isEnch:true}]
     };
 
     function save() { localStorage.setItem(SAVE_KEY, JSON.stringify({inv, bag, worldData})); }
+    function load() {
+        const d = JSON.parse(localStorage.getItem(SAVE_KEY));
+        if(d) { inv=d.inv; bag=d.bag; worldData=d.worldData; }
+        else { 
+            inv={w:0,s:0,i:0,g:0,d:0,n:0,obsidian:0,exp:0,hp:20,hg:20,wt:20,wool:0,raw:0}; bag=[]; 
+            worldData={forest:{items:[],rivers:[]},house:{items:[]},cave:{items:[]},nether:{items:[]}};
+            setupInitialWorld();
+        }
+        pX=window.innerWidth/2; pY=window.innerHeight/2;
+    }
+
+    function setupInitialWorld() {
+        let rx = window.innerWidth * 0.45;
+        for(let y=0; y<window.innerHeight; y+=45) { rx += Math.sin(y/100)*35; worldData.forest.rivers.push({x:rx, y:y}); }
+        for(let i=0; i<8; i++) spawnData('forest', 'tree', '🌲');
+        for(let i=0; i<4; i++) spawnData('forest', 'rock', '🪨');
+        spawnData('forest', 'cave_entrance', '🕳️', window.innerWidth-80, window.innerHeight/2);
+    }
+
+    function spawnData(map, t, icon, x, y) {
+        let it = {t:t, icon:icon, x:x||Math.random()*(window.innerWidth-50), y:y||Math.random()*(window.innerHeight-50), live:true};
+        worldData[map].items.push(it);
+    }
+
+    function switchMap(mode) {
+        mapMode = mode; document.getElementById('river-layer').innerHTML = ''; document.getElementById('entity-layer').innerHTML = '';
+        if(mode === 'forest') {
+            document.getElementById('game').style.background = "#2d4a22";
+            worldData.forest.rivers.forEach(r => { let d=document.createElement('div'); d.className='obj river-tile'; d.style.left=r.x+'px'; d.style.top=r.y+'px'; document.getElementById('river-layer').appendChild(d); });
+        } else if(mode === 'cave') {
+            document.getElementById('game').style.background = "#1a1a1a";
+            spawnInstance('ladder', '🪜', 50, window.innerHeight/2);
+            if(worldData.cave.items.length < 10) generateObstacles('cave', '🪨', '🌚');
+        } else if(mode === 'nether') {
+            document.getElementById('game').style.background = "#4d0000";
+            spawnInstance('ladder', '🟣', 50, window.innerHeight/2);
+            generateObstacles('nether', '🧱', '🏅');
+        } else { document.getElementById('game').style.background = "#5d4037"; spawnInstance('door', '🚪', window.innerWidth/2, window.innerHeight-80); }
+        worldData[mode].items.forEach(it => { if(it.live) renderObj(it); });
+    }
+
+    function generateObstacles(map, std, rare) {
+        for(let x=150; x<window.innerWidth; x+=60) {
+            for(let y=50; y<window.innerHeight-50; y+=60) {
+                let icon = Math.random() < 0.15 ? rare : std;
+                spawnData(map, 'stone', icon, x, y);
+            }
+        }
+    }
+
+    function spawnInstance(t, icon, x, y) {
+        let d = document.createElement('div'); d.className = 'obj'; d.innerHTML = icon;
+        d.style.left = x+'px'; d.style.top = y+'px';
+        document.getElementById('entity-layer').appendChild(d);
+    }
+
+    function renderObj(it) {
+        let d = document.createElement('div'); d.className = 'obj '+(it.t.includes('house')?'house':'');
+        d.innerHTML = it.icon; d.style.left = it.x+'px'; d.style.top = it.y+'px';
+        document.getElementById('entity-layer').appendChild(d); it.el = d;
+    }
+
+    function gameLoop() {
+        if(!mining) {
+            pX+=mX; pY+=mY; pX=Math.max(20, Math.min(window.innerWidth-20, pX)); pY=Math.max(20, Math.min(window.innerHeight-20, pY));
+            document.getElementById('player').style.left=pX+'px'; document.getElementById('player').style.top=pY+'px';
+            
+            if(mapMode === 'forest') {
+                worldData.forest.rivers.forEach(r => { if(Math.abs(pX-r.x-24)<35 && Math.abs(pY-r.y-24)<35) { inv.wt=Math.min(20, inv.wt+0.15); upUI(); } });
+            }
+            if(mapMode === 'nether') { inv.wt = Math.max(0, inv.wt - 0.01); } // 地獄脫水
+
+            worldData[mapMode].items.forEach(it => {
+                if(!it.live) return;
+                if(Math.abs(pX-it.x-24)<45 && Math.abs(pY-it.y-24)<45) {
+                    if(it.t==='cave_entrance'){ switchMap('cave'); pX=80; pY=window.innerHeight/2; }
+                    else if(it.t==='log_house'){ switchMap('house'); pX=window.innerWidth/2; pY=window.innerHeight/2; }
+                    else if(it.t==='portal'){ switchMap('nether'); pX=80; pY=window.innerHeight/2; }
+                    else startMining(it);
+                }
+            });
+
+            if((mapMode==='cave'||mapMode==='nether') && pX < 60) { switchMap('forest'); pX=window.innerWidth/2; pY=window.innerHeight/2; }
+            if(mapMode==='house' && pY > window.innerHeight-100) { switchMap('forest'); pX=window.innerWidth/2; pY=window.innerHeight/2; }
+        }
+        requestAnimationFrame(gameLoop);
+    }
+
+    function startMining(it) {
+        mining=true; mX=0; mY=0;
+        let bar=document.getElementById('m-bar'), fill=document.getElementById('m-fill');
+        bar.style.display='block'; bar.style.left=(pX-30)+'px'; bar.style.top=(pY-55)+'px';
+        let pct=0, baseSpd = 12;
+        if(currentEquip) {
+            if(currentEquip.id==='d_pick') baseSpd = 35;
+            if(currentEquip.id==='n_pick') baseSpd = 55;
+            if(currentEquip.ench) baseSpd *= 1.5;
+        }
+        let t=setInterval(()=>{
+            pct+=baseSpd; fill.style.width=pct+'%';
+            if(pct>=100){ 
+                clearInterval(t); mining=false; bar.style.display='none'; it.live=false; if(it.el) it.el.style.display='none';
+                if(it.icon==='🌲') inv.w+=3; 
+                else if(it.icon==='🪨') inv.s+=2;
+                else if(it.icon==='🌚') inv.obsidian+=1;
+                else if(it.icon==='🏅') inv.n+=1;
+                else if(it.icon==='🏔️') inv.i+=2;
+                else if(it.icon==='💎') inv.d+=2;
+                inv.exp += 1;
+                save(); upUI(); 
+                if(mapMode==='forest') setTimeout(()=>{ it.live=true; if(it.el) it.el.style.display='block'; }, 8000);
+            }
+        }, 150);
+    }
+
+    function craft(tab, id) {
+        let r = recipes[tab].find(x => x.id == id);
+        if(r.isEnch) {
+            if(inv.exp >= 10 && currentEquip && !currentEquip.ench) {
+                inv.exp -= 10; currentEquip.ench = true; notify("✨ 附魔成功！挖掘速度提升！");
+            } else alert("經驗不足或已附魔");
+        } else {
+            let can = true; for(let k in r.cost) { 
+                let source = (k==='d_pick') ? bag : inv;
+                if(k==='d_pick') { if(!bag.some(b=>b.id==='d_pick')) can=false; }
+                else if(inv[k] < r.cost[k]) can = false; 
+            }
+            if(can) { 
+                for(let k in r.cost) if(k!=='d_pick') inv[k]-=r.cost[k]; 
+                if(r.cost.d_pick) bag = bag.filter(b=>b.id!=='d_pick');
+                bag.push({...r}); save(); upUI(); notify("✅ 製作完成: " + r.name); 
+            } else alert("材料不足！");
+        }
+    }
+
+    function useItem(i) {
+        let it = bag[i];
+        if(it.type === 'build') {
+            spawnData(mapMode, it.id, it.emo, pX-40, pY-40); renderObj(worldData[mapMode].items[worldData[mapMode].items.length-1]);
+            bag.splice(i,1); closeUI(); save();
+        } else {
+            currentEquip=(currentEquip && currentEquip.id==it.id)?null:it;
+            document.getElementById('hand').innerText=currentEquip?currentEquip.emo:'';
+            document.getElementById('hand').style.display=currentEquip?'flex':'none';
+            drawBag();
+        }
+    }
+
+    function openUI(t) { closeUI(); document.getElementById(t+'-pop').style.display='block'; if(t=='bag') drawBag(); else setTab('tools', document.querySelector('.tab')); }
+    function closeUI() { document.querySelectorAll('.pop').forEach(p=>p.style.display='none'); }
+    function setTab(tab, el) {
+        document.querySelectorAll('.tab').forEach(x => x.classList.remove('active')); el.classList.add('active');
+        let list = document.getElementById('craft-list'); list.innerHTML = '';
+        recipes[tab].forEach(r => { 
+            let card=document.createElement('div'); card.className='card'; 
+            let costStr = ""; for(let k in r.cost) costStr += k+":"+r.cost[k]+" ";
+            card.innerHTML=`${r.emo}<br>${r.name}<br><small>${costStr}</small><br><button class="craft-btn" onclick="craft('${tab}','${r.id}')">製作/執行</button>`; 
+            list.appendChild(card); 
+        });
+    }
+    function drawBag() {
+        let list=document.getElementById('bag-list'); list.innerHTML=bag.length==0?"<p>空</p>":"";
+        bag.forEach((it, i) => { 
+            let card=document.createElement('div'); let isEq=currentEquip && currentEquip.id==it.id; card.className='card';
+            card.innerHTML=`${it.emo}${it.ench?'✨':''}<br>${it.name}<br><button class="craft-btn" style="background:${isEq?'#e67e22':'#3498db'}" onclick="useItem(${i})">${it.type?'放置':(isEq?'卸下':'裝備')}</button>`; 
+            list.appendChild(card); 
+        });
+    }
+    function upUI() {
+        const ids = ['r-w','r-s','r-i','r-d','r-n','hp','hg','wt'];
+        const vals = [inv.w, inv.s, inv.i, inv.d, inv.n, inv.hp, inv.hg, Math.floor(inv.wt)];
+        ids.forEach((id, i) => document.getElementById(id).innerText = vals[i]);
+        document.getElementById('exp-tag').innerText = "✨ 經驗: " + inv.exp;
+    }
+    function survivalTick() { inv.hg=Math.max(0, inv.hg-0.5); if(inv.hg<=0) inv.hp=Math.max(0, inv.hp-1); upUI(); }
+    function notify(t) { let m=document.getElementById('msg'); m.innerText=t; m.style.display='block'; setTimeout(()=>m.style.display='none', 2000); }
+
+    var joy=document.getElementById('joy'); joy.addEventListener('touchstart', (e)=>moveJ(e.touches[0]), {passive:false}); joy.addEventListener('touchmove', (e)=>{ e.preventDefault(); moveJ(e.touches[0]); }, {passive:false}); joy.addEventListener('touchend', ()=>{ mX=0; mY=0; document.getElementById('knob').style.transform='translate(-50%,-50%)'; });
+    function moveJ(t) { if(mining) return; var r=joy.getBoundingClientRect(); var dx=t.clientX-(r.left+r.width/2), dy=t.clientY-(r.top+r.height/2); var d=Math.sqrt(dx*dx+dy*dy); if(d>45){ dx*=45/d; dy*=45/d; } document.getElementById('knob').style.transform=`translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`; mX=dx/13; mY=dy/13; }
+
+    load(); switchMap('forest'); upUI(); requestAnimationFrame(gameLoop); setInterval(save, 5000); setInterval(survivalTick, 5000);
+</script>
+</body>
+</html>
     function load() {
         const d = JSON.parse(localStorage.getItem(SAVE_KEY));
         if(d) { inv=d.inv; bag=d.bag; worldData=d.worldData; }
